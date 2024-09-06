@@ -14,6 +14,9 @@ const atualizaSchema = z.object({
     autor: z.string().min(2, { message: "O autor é obrigatório" }),
     imagem: z.string().url("A URL da imagem é inválida").optional().nullable(),
 });
+const idSchema = z.object({
+    id: z.string().regex(/^\d+$/, "ID deve ser um número inteiro positivo").transform(Number),
+});
 
 export const criar = async (request, response) => {
     try {
@@ -46,15 +49,17 @@ export const criar = async (request, response) => {
     }
 };
 
-export const listarPostagensid = async (request, response) => {
-    const { postagem_id } = request.params
-
+export const listarPostagensid = async (request, response) => {    
+    const { id } = request.params;
     try {
-        const postagem = await Postagens.findByPk(postagem_id)
+        idSchema.parse({ id });
+        const postagem = await Postagens.findByPk(id);
 
         if (!postagem) {
-            return response.status(404).json({ message: `Postagem ${postagem_id} não existe` });
+            return response.status(404).json({ message: 'Postagem não encontrada' });
         }
+
+        response.status(200).json(postagem);
 
         response.status(200).json({ message: postagem })
     } catch (error) {
@@ -101,3 +106,58 @@ export const atualizarPostagem = async (request, response) => {
         response.status(500).json({ message: "Erro interno do servidor" });
     }
 };
+
+export const listarTudo = async (request, response) => {
+    const page = parseInt(request.query.page) || 1
+    const limit = 3
+    const offset = (page - 1) * limit
+    try {
+        const postagens = await Postagens.findAndCountAll({
+            limit,
+            offset
+        })
+
+        const totalPaginas = Math.ceil(postagens.count / limit)
+        response.status(200).json({
+            totalPostagens: postagens.count,
+            totalPags: totalPaginas,
+            pagAtual: page,
+            itensPorPag: limit,
+            ProximaPag: totalPaginas === 0 ? null : `http://localhost:3333/tarefas?page=${page + 1}`,
+            pagAnterior: page - 1 === 0 ? null : `http://localhost:3333/tarefas?page=${page - 1}`,
+            Postagens: postagens.rows
+        });
+    } catch (error) {
+        response.status(500).json({ message: "Erro interno do servidor: " + error })
+    }
+}
+
+export const excluirPostagem = async (request, response) => {
+    const { id } = request.params;
+
+    try {
+        idSchema.parse({ id });
+
+        const linhasAfetadas = await Postagens.destroy({
+            where: { id },
+        });
+
+        if (linhasAfetadas <= 0) {
+            return response.status(404).json({ message: "Postagem não encontrada" });
+        }
+
+        response.status(200).json({ message: "Postagem excluída" });
+    } catch (error) {
+
+        if (error instanceof z.ZodError) {
+            return response.status(400).json({
+                validationErrors: error.errors.map(err => ({
+                    field: err.path[0],
+                    message: err.message,
+                })),
+            });
+        }
+        response.status(500).json({ message: "Erro interno do servidor" });
+    }
+};
+
