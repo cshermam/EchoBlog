@@ -62,7 +62,7 @@ export const listarPostagens = async (request, response) => {
     }
 }
 
-// export const atualizarPostagem = async (request, response) => {
+export const atualizarPostagem = async (request, response) => {
 //     const { postagem_id } = request.params;
 
 //     // Validar o corpo da requisição com Zod
