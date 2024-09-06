@@ -46,7 +46,7 @@ export const criar = async (request, response) => {
     }
 };
 
-export const listarPostagens = async (request, response) => {
+export const listarPostagensid = async (request, response) => {
     const { postagem_id } = request.params
 
     try {
