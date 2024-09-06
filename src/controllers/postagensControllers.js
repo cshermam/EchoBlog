@@ -101,3 +101,28 @@ export const atualizarPostagem = async (request, response) => {
         response.status(500).json({ message: "Erro interno do servidor" });
     }
 };
+
+export const listarTudo = async (request, response) => {
+    const page = parseInt(request.query.page) || 1
+    const limit = 3
+    const offset = (page - 1) * limit
+    try {
+        const postagens = await Postagens.findAndCountAll({
+            limit,
+            offset
+        })
+
+        const totalPaginas = Math.ceil(postagens.count / limit)
+        response.status(200).json({
+            totalPostagens: postagens.count,
+            totalPags: totalPaginas,
+            pagAtual: page,
+            itensPorPag: limit,
+            ProximaPag: totalPaginas === 0 ? null : `http://localhost:3333/tarefas?page=${page + 1}`,
+            pagAnterior: page - 1 === 0 ? null : `http://localhost:3333/tarefas?page=${page - 1}`,
+            Postagens: postagens.rows
+        });
+    } catch (error) {
+        response.status(500).json({ message: "Erro interno do servidor: " + error })
+    }
+}
