@@ -5,7 +5,7 @@ import { criar, listarPostagens, atualizarPostagem } from "../controllers/postag
 const router = Router();
 
 router.post("/", criar)
-router.get("/:postagem_id", listarPostagens)
+
 
 
 export default router
