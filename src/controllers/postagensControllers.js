@@ -14,6 +14,9 @@ const atualizaSchema = z.object({
     autor: z.string().min(2, { message: "O autor é obrigatório" }),
     imagem: z.string().url("A URL da imagem é inválida").optional().nullable(),
 });
+const idSchema = z.object({
+    id: z.string().regex(/^\d+$/, "ID deve ser um número inteiro positivo").transform(Number),
+});
 
 export const criar = async (request, response) => {
     try {
@@ -126,3 +129,34 @@ export const listarTudo = async (request, response) => {
         response.status(500).json({ message: "Erro interno do servidor: " + error })
     }
 }
+
+export const excluirPostagem = async (request, response) => {
+    const { id } = request.params;
+
+    // Validar o ID com Zod
+    try {
+        idSchema.parse({ id });
+
+        // Executar a exclusão da postagem
+        const linhasAfetadas = await Postagens.destroy({
+            where: { id },
+        });
+
+        if (linhasAfetadas <= 0) {
+            return response.status(404).json({ message: "Postagem não encontrada" });
+        }
+
+        response.status(200).json({ message: "Postagem excluída" });
+    } catch (error) {
+
+        if (error instanceof z.ZodError) {
+            return response.status(400).json({
+                validationErrors: error.errors.map(err => ({
+                    field: err.path[0],
+                    message: err.message,
+                })),
+            });
+        }
+        response.status(500).json({ message: "Erro interno do servidor" });
+    }
+};
