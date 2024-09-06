@@ -133,11 +133,9 @@ export const listarTudo = async (request, response) => {
 export const excluirPostagem = async (request, response) => {
     const { id } = request.params;
 
-    // Validar o ID com Zod
     try {
         idSchema.parse({ id });
 
-        // Executar a exclusão da postagem
         const linhasAfetadas = await Postagens.destroy({
             where: { id },
         });
