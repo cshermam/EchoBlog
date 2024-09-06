@@ -41,19 +41,20 @@ export const criar = async (request, response) => {
     }
 };
 
-export const listarPostagens = async (request, response) => {
-    const { postagem_id } = request.params
-
+export const listarPostagensid = async (request, response) => {    
+    const { id } = request.params;
     try {
-        const postagem = await Postagens.findByPk(postagem_id)
+        idSchema.parse({ id });
+        const postagem = await Postagens.findByPk(id);
 
         if (!postagem) {
-            return response.status(404).json({ message: `Postagem ${postagem_id} não existe` });
+            return response.status(404).json({ message: 'Postagem não encontrada' });
         }
+
+        response.status(200).json(postagem);
 
         response.status(200).json({ message: postagem })
     } catch (error) {
         response.status(500).json({ message: "Erro interno do servidor" + error })
     }
 }
-
